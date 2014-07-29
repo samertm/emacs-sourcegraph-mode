@@ -18,6 +18,7 @@
 (require 'ffap)
 (require 'find-file)
 (require 'ring)
+(require 'json)
 (require 'url)
 
 (defmacro sourcegraph--xemacs-p ()
@@ -122,10 +123,11 @@ description at POINT."
   "Describe the expression at POINT."
   (interactive "d")
   (condition-case nil
-      (let ((resp (cdr (sourcegraph--call point))))
+      (let ((resp (sourcegraph--call point)))
         (if (not resp)
             (message "No description found for expression at point")
-          (message "%s" (assoc 'Name resp))))
+          (display-message-or-buffer
+           (format "%s" (assoc-default 'DocHTML resp)))))
     (file-error (message "Could not run src binary"))))
 
 
