@@ -115,7 +115,7 @@ description at POINT."
                            "--file"
                            (file-truename (buffer-file-name (sourcegraph--coverage-origin-buffer)))
                            "--start-byte"
-                           (number-to-string (sourcegraph--position-bytes point)))
+                           (number-to-string (sourcegraph--position-bytes (+ point -1))))
       (with-current-buffer outbuf
         (json-read-from-string (buffer-substring-no-properties (point-min) (point-max)))))))
 
@@ -126,10 +126,49 @@ description at POINT."
       (let ((resp (sourcegraph--call point)))
         (if (not resp)
             (message "No description found for expression at point")
-          (display-message-or-buffer
-           (format "%s" (assoc-default 'DocHTML resp)))))
+                                        ;          (display-message-or-buffer (format "%s" (assoc-default 'DocHTML (assoc-default 'Def resp))))
+          (let ((outbuf (get-buffer-create "*srcgraph*")))
+            (with-current-buffer outbuf
+              (erase-buffer)
+              (let ((examples-html (mapcar (lambda (x) (assoc-default 'SrcHTML x)) (assoc-default 'Examples resp))))
+                ;;                (display-message-or-buffer (mapconcat 'identity examples-html "\n------\n")))
+                (insert (concat
+                         (assoc-default 'Name (assoc-default 'Def resp))
+                         "<br><br>"
+                         (assoc-default 'DocHTML (assoc-default 'Def resp))
+                         "<br><br>"
+                         "<hr>"
+                         "<br><br>"
+                         "<pre>"
+                         (mapconcat 'identity examples-html "</pre><br><hr><br><pre>")
+                         "</pre>"
+                         ))
+                (shr-render-buffer outbuf)
+                )))))
     (file-error (message "Could not run src binary"))))
 
+
+;; an in-buffer browser
+;; workaround for Emacs<24.4
+;; TODO(sqs): how to disable for Emacs>=24.4?
+(defun add-face-text-property (beg end face &optional appendp object)
+  "Combine FACE BEG and END."
+  (let ((b beg))
+    (while (< b end)
+      (let ((oldval (get-text-property b 'face)))
+        (put-text-property
+         b (setq b (next-single-property-change b 'face nil end))
+         'face (cond ((null oldval)
+                      face)
+                     ((and (consp oldval)
+                           (not (keywordp (car oldval))))
+                      (if appendp
+                          (nconc oldval (list face))
+                        (cons face oldval)))
+                     (t
+                      (if appendp
+                          (list oldval face)
+                        (list face oldval)))))))))
 
 (provide 'sourcegraph-mode)
 
