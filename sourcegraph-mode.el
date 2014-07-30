@@ -126,27 +126,29 @@ description at POINT."
       (let ((resp (sourcegraph--call point)))
         (if (not resp)
             (message "No description found for expression at point")
-                                        ;          (display-message-or-buffer (format "%s" (assoc-default 'DocHTML (assoc-default 'Def resp))))
           (let ((outbuf (get-buffer-create "*srcgraph*")))
+            (let ((case-fold-search nil))
             (with-current-buffer outbuf
               (erase-buffer)
-              (let ((examples-html (mapcar (lambda (x) (assoc-default 'SrcHTML x)) (assoc-default 'Examples resp))))
-                ;;                (display-message-or-buffer (mapconcat 'identity examples-html "\n------\n")))
                 (insert (concat
-                         (assoc-default 'Name (assoc-default 'Def resp))
+                         "<base href='https://sourcegraph.com'>"
+                         "<h1>" (assoc-default 'Name (assoc-default 'Def resp)) "</h1>"
                          "<br><br>"
                          (assoc-default 'DocHTML (assoc-default 'Def resp))
                          "<br><br>"
+                         "<h3>Details</h3>"
+                         "<table>"
+                         (mapconcat (lambda (e) (format "<tr><th>%s</th><td>%s</td></tr>" (car e) (json-encode (cdr e)))) (assoc-default 'Data (assoc-default 'Def resp)) "\n")
+                         "</table>"
+                         "<br><br>"
                          "<hr>"
                          "<br><br>"
-                         "<pre>"
-                         (mapconcat 'identity examples-html "</pre><br><hr><br><pre>")
-                         "</pre>"
+                         (mapconcat
+                          (lambda (x) (concat "<h3>" (assoc-default 'Repo x) "<br>&nbsp;@ " (assoc-default 'File x) ":" (number-to-string (assoc-default 'StartLine x)) "-" (number-to-string (assoc-default 'EndLine x)) "</h3>" "<pre style='background-color:#333'>" (replace-regexp-in-string (concat (assoc-default 'Path (assoc-default 'Def resp)) "\" class=\"ref\"><span") (concat (assoc-default 'Path (assoc-default 'Def resp)) "\" class=\"ref\"><span style=\"color:orange;font-weight:bold\"") (assoc-default 'SrcHTML x)) "</pre>")) (assoc-default 'Examples resp) "<br><hr><br>")
                          ))
                 (shr-render-buffer outbuf)
-                )))))
-    (file-error (message "Could not run src binary"))))
-
+                ))))))
+    (file-error (message "Could not run src binary")))
 
 ;; an in-buffer browser
 ;; workaround for Emacs<24.4
