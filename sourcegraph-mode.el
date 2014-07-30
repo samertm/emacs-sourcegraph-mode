@@ -124,36 +124,38 @@ description at POINT."
   (interactive "d")
   (save-selected-window 
     (condition-case nil
-        (let ((resp (sourcegraph--call point)))
-          (if (not resp)
-              (message "No description found for expression at point")
-            (let ((outbuf (get-buffer-create "*srcgraph*")))
-              (let ((case-fold-search nil))
-                (with-current-buffer outbuf
-                  (erase-buffer)
-                  (insert (concat
-                           "<base href='https://sourcegraph.com'>"
-                           "<h1>" (assoc-default 'Name (assoc-default 'Def resp)) "</h1>"
-                           "<br><br>"
-                           (assoc-default 'DocHTML (assoc-default 'Def resp))
-                           "<br><br>"
-                           "<h3>Details</h3>"
-                           "<table>"
-                           "<tr><th>Repository</th><td>" (assoc-default 'Repo (assoc-default 'Def resp)) "</td></tr>"
-                           "<tr><th>File</th><td>" (assoc-default 'File (assoc-default 'Def resp)) "</td></tr>"
-                           (mapconcat (lambda (e) (format "<tr><th>%s</th><td>%s</td></tr>" (car e) (json-encode (cdr e)))) (assoc-default 'Data (assoc-default 'Def resp)) "\n")
-                           "</table>"
-                           "<br><br><br>"
-                           (if (> (length (assoc-default 'Examples resp)) 0)
-                               (concat
-                           "<h2>Examples on ✱ Sourcegraph</h2>"
-                           "<hr>"
-                           "<br><br>"
-                           (mapconcat
-                            (lambda (x) (concat "<h3>" (assoc-default 'Repo x) "<br>&nbsp;@ " (assoc-default 'File x) ":" (number-to-string (assoc-default 'StartLine x)) "-" (number-to-string (assoc-default 'EndLine x)) "</h3>" "<pre style='background-color:#333'>" (replace-regexp-in-string (concat (assoc-default 'Path (assoc-default 'Def resp)) "\" class=\"ref\"><span") (concat (assoc-default 'Path (assoc-default 'Def resp)) "\" class=\"ref\"><span style=\"color:orange;font-weight:bold\"") (assoc-default 'SrcHTML x)) "</pre>")) (assoc-default 'Examples resp) "<br><hr><br>")))
-                           ))
-                  (shr-render-buffer outbuf)
-                  )))))
+        (if (buffer-modified-p)
+            (message "Can't describe from an unsaved buffer; save and try again.")
+          (let ((resp (sourcegraph--call point)))
+            (if (not resp)
+                (message "No description found for expression at point")
+              (let ((outbuf (get-buffer-create "*srcgraph*")))
+                (let ((case-fold-search nil))
+                  (with-current-buffer outbuf
+                    (erase-buffer)
+                    (insert (concat
+                             "<base href='https://sourcegraph.com'>"
+                             "<h1>" (assoc-default 'Name (assoc-default 'Def resp)) "</h1>"
+                             "<br><br>"
+                             (assoc-default 'DocHTML (assoc-default 'Def resp))
+                             "<br><br>"
+                             "<h3>Details</h3>"
+                             "<table>"
+                             "<tr><th>Repository</th><td>" (assoc-default 'Repo (assoc-default 'Def resp)) "</td></tr>"
+                             "<tr><th>File</th><td>" (assoc-default 'File (assoc-default 'Def resp)) "</td></tr>"
+                             (mapconcat (lambda (e) (format "<tr><th>%s</th><td>%s</td></tr>" (car e) (json-encode (cdr e)))) (assoc-default 'Data (assoc-default 'Def resp)) "\n")
+                             "</table>"
+                             "<br><br><br>"
+                             (if (> (length (assoc-default 'Examples resp)) 0)
+                                 (concat
+                                  "<h2>Examples on ✱ Sourcegraph</h2>"
+                                  "<hr>"
+                                  "<br><br>"
+                                  (mapconcat
+                                   (lambda (x) (concat "<h3>" (assoc-default 'Repo x) "<br>&nbsp;@ " (assoc-default 'File x) ":" (number-to-string (assoc-default 'StartLine x)) "-" (number-to-string (assoc-default 'EndLine x)) "</h3>" "<pre style='background-color:#333'>" (replace-regexp-in-string (concat (assoc-default 'Path (assoc-default 'Def resp)) "\" class=\"ref\"><span") (concat (assoc-default 'Path (assoc-default 'Def resp)) "\" class=\"ref\"><span style=\"color:orange;font-weight:bold\"") (assoc-default 'SrcHTML x)) "</pre>")) (assoc-default 'Examples resp) "<br><hr><br>")))
+                             ))
+                    (shr-render-buffer outbuf)
+                    ))))))
       (file-error (message "Could not run src binary")))))
 
 ;; an in-buffer browser
