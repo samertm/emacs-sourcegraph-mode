@@ -108,7 +108,7 @@ description at POINT."
                            (point-max)
                            "src"
                            nil
-                           outbuf
+                           (list outbuf "/tmp/sourcegraph-mode.log")
                            nil
                            "api"
                            "describe"
