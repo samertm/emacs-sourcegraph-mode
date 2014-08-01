@@ -61,6 +61,10 @@ a before-save-hook."
           (const :tag "None" nil))
   :group 'sourcegraph)
 
+(defvar sourcegraph-log-file
+  "/tmp/sourcegraph-mode.log"
+  "The log 'src' writes stderr to")
+
 ;;;###autoload
 (define-minor-mode sourcegraph-mode
   "Minor mode for using Emacs with Sourcegraph and srclib.
@@ -108,7 +112,7 @@ description at POINT."
                            (point-max)
                            "src"
                            nil
-                           (list outbuf "/tmp/sourcegraph-mode.log")
+                           (list outbuf sourcegraph-log-file)
                            nil
                            "api"
                            "describe"
@@ -156,7 +160,8 @@ description at POINT."
                              ))
                     (shr-render-buffer outbuf)
                     ))))))
-      (file-error (message "Could not run src binary")))))
+      (file-error (message "Could not run src binary"))
+      ((json-readtable-error end-of-file) (message (concat "Could not read json. See \"" sourcegraph-log-file "\" for details."))))))
 
 ;; an in-buffer browser
 ;; workaround for Emacs<24.4
