@@ -14,7 +14,8 @@ for any language srclib supports, currently:
 * JavaScript (Node.js)
 
 
-Screenshots:
+Check out the screenshots below, and the
+[screencast on YouTube](https://www.youtube.com/watch?v=cm59qQD6khs).
 
 ![screenshot](https://s3-us-west-2.amazonaws.com/sourcegraph-assets/emacs-sourcegraph-mode-screenshot-0.png)
 
