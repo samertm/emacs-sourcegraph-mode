@@ -20,6 +20,7 @@
 (require 'ring)
 (require 'json)
 (require 'url)
+(require 'shr)
 
 (defmacro sourcegraph--xemacs-p ()
   `(featurep 'xemacs))
