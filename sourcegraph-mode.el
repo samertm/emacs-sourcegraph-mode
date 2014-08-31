@@ -124,6 +124,11 @@ description at POINT."
       (with-current-buffer outbuf
         (json-read-from-string (buffer-substring-no-properties (point-min) (point-max)))))))
 
+(defun sourcegraph-unescape-forward-slash (string)
+  (while (string-match "\\\\/" string)
+    (setq string (replace-match "/" t t string)))
+  string)
+
 (defun sourcegraph-describe (point)
   "Describe the expression at POINT."
   (interactive "d")
@@ -148,7 +153,7 @@ description at POINT."
                              "<table>"
                              "<tr><th>Repository</th><td>" (assoc-default 'Repo (assoc-default 'Def resp)) "</td></tr>"
                              "<tr><th>File</th><td>" (assoc-default 'File (assoc-default 'Def resp)) "</td></tr>"
-                             (mapconcat (lambda (e) (format "<tr><th>%s</th><td>%s</td></tr>" (car e) (json-encode (cdr e)))) (assoc-default 'Data (assoc-default 'Def resp)) "\n")
+                             (mapconcat (lambda (e) (format "<tr><th>%s</th><td>%s</td></tr>" (car e) (sourcegraph-unescape-forward-slash (json-encode (cdr e))))) (assoc-default 'Data (assoc-default 'Def resp)) "\n")
                              "</table>"
                              "<br><br><br>"
                              (if (> (length (assoc-default 'Examples resp)) 0)
